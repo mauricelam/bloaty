@@ -2039,6 +2039,19 @@ void Bloaty::ScanAndRollupFile(const std::string& filename, Rollup* rollup,
 void Bloaty::ScanAndRollupFiles(const std::vector<std::string>& filenames,
                                 std::vector<std::string>* build_ids,
                                 Rollup* rollup) const {
+#ifdef __EMSCRIPTEN__
+  // WebAssembly/Emscripten build: multi-threading is disabled for simplicity
+  // and better compatibility with various browser environments (no need for
+  // COOP/COEP headers or SharedArrayBuffer support).
+  std::unique_ptr<ReImpl> regex = nullptr;
+  if (options_.has_source_filter()) {
+    regex = absl::make_unique<ReImpl>(options_.source_filter());
+  }
+  rollup->SetFilterRegex(regex.get());
+  for (const auto& filename : filenames) {
+    ScanAndRollupFile(filename, rollup, build_ids);
+  }
+#else
   int num_cpus = std::thread::hardware_concurrency();
   int num_threads = std::min(num_cpus, static_cast<int>(filenames.size()));
 
@@ -2090,6 +2103,7 @@ void Bloaty::ScanAndRollupFiles(const std::vector<std::string>& filenames,
   if (index.TryGetError(&error)) {
     THROW(error.c_str());
   }
+#endif
 }
 
 void Bloaty::ScanAndRollup(const Options& options, RollupOutput* output) {

@@ -1,8 +1,12 @@
+!tests/testdata/**
 *.a
+*.dSYM
 *.o
 .*.sw?
 /bloaty
-!tests/testdata/**
-*.dSYM
 build
 build-*
+build_wasm/
+host_build/
+web/bloaty.js
+web/bloaty.wasm
