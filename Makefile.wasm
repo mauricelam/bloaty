@@ -23,6 +23,8 @@ wasm_lib:
 # 2. Link everything into bloaty.js and bloaty.wasm
 wasm_module: wasm_lib
 	mkdir -p $(WEB_DIR)
+	# Manually copy index.html and example.js to the web directory if they are not there
+	cp web_src/* $(WEB_DIR)/ 2>/dev/null || true
 	em++ -O3 -I$(SOURCE_DIR) -I$(SOURCE_DIR)/src \
 		-I$(SOURCE_DIR)/third_party/re2 -I$(SOURCE_DIR)/third_party/capstone/include \
 		-I$(SOURCE_DIR)/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \

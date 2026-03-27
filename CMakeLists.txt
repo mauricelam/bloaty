@@ -370,34 +370,43 @@ if(DEFINED ENV{CXXFLAGS})
 endif()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src)
-if(PROTOC_FOUND)
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
-         ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h
-  DEPENDS protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
-  COMMAND protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
-      --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src
-      -I${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-else()
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
-         ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h
-  COMMAND protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
-      --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src
-      -I${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+if(NOT EMSCRIPTEN)
+  if(PROTOC_FOUND)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
+           ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h
+    DEPENDS protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
+    COMMAND protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
+        --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src
+        -I${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  else()
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
+           ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h
+    COMMAND protoc ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty.proto
+        --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src
+        -I${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  endif()
 endif()
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/bloaty_package.bloaty
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+if(EMSCRIPTEN)
+  set(BLOATY_PROTO_SRCS "")
+else()
+  set(BLOATY_PROTO_SRCS
+      ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h)
+endif()
+
 add_library(libbloaty STATIC
     src/bloaty.cc
     src/bloaty.h
     src/disassemble.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/src/bloaty.pb.h
+    ${BLOATY_PROTO_SRCS}
     src/dwarf/attr.h
     src/dwarf/attr.cc
     src/dwarf/dwarf_util.cc
