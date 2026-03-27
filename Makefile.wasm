@@ -4,6 +4,7 @@
 EMSCRIPTEN_ROOT ?= $(shell which emcc | sed 's|/upstream/emscripten/emcc||')
 WASM_BUILD_DIR = build_wasm
 WEB_DIR = web
+SOURCE_DIR = $(shell pwd)
 
 .PHONY: all clean wasm_lib wasm_module
 
@@ -13,7 +14,7 @@ all: wasm_module
 # Note: protobuf is NOT built for WASM as we use a mock (src/wasm_protobuf_mock.h)
 wasm_lib:
 	mkdir -p $(WASM_BUILD_DIR)
-	cd $(WASM_BUILD_DIR) && emcmake cmake /app -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
+	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
 	cd $(WASM_BUILD_DIR) && emmake make -j$$(nproc) libbloaty
 	# Ensure capstone and zstd are built
 	cd $(WASM_BUILD_DIR)/third_party/capstone && emmake make capstone_static
@@ -22,12 +23,12 @@ wasm_lib:
 # 2. Link everything into bloaty.js and bloaty.wasm
 wasm_module: wasm_lib
 	mkdir -p $(WEB_DIR)
-	em++ -O3 -I/app -I/app/src \
-		-I/app/third_party/re2 -I/app/third_party/capstone/include \
-		-I/app/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
-		-I/app/third_party/demumble/third_party/llvm/include \
-		-I/app/third_party/demumble/third_party/swift/include \
-		/app/src/wasm_main.cc $(WASM_BUILD_DIR)/liblibbloaty.a \
+	em++ -O3 -I$(SOURCE_DIR) -I$(SOURCE_DIR)/src \
+		-I$(SOURCE_DIR)/third_party/re2 -I$(SOURCE_DIR)/third_party/capstone/include \
+		-I$(SOURCE_DIR)/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
+		-I$(SOURCE_DIR)/third_party/demumble/third_party/llvm/include \
+		-I$(SOURCE_DIR)/third_party/demumble/third_party/swift/include \
+		$(SOURCE_DIR)/src/wasm_main.cc $(WASM_BUILD_DIR)/liblibbloaty.a \
 		$(WASM_BUILD_DIR)/third_party/re2/libre2.a \
 		$(WASM_BUILD_DIR)/third_party/capstone/libcapstone.a \
 		$(WASM_BUILD_DIR)/third_party/zlib/libz.a \
