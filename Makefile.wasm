@@ -14,11 +14,8 @@ all: wasm_module
 # Note: protobuf is NOT built for WASM as we use a mock (src/wasm_protobuf_mock.h)
 wasm_lib:
 	mkdir -p $(WASM_BUILD_DIR)
-	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
-	cd $(WASM_BUILD_DIR) && emmake make -j$$(nproc) libbloaty
-	# Ensure capstone and zstd are built
-	cd $(WASM_BUILD_DIR)/third_party/capstone && emmake make capstone_static
-	cd $(WASM_BUILD_DIR)/third_party/zstd/build/cmake/lib && emmake make libzstd_static
+	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -G Ninja -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
+	cd $(WASM_BUILD_DIR) && ninja libbloaty capstone_static libzstd_static
 
 # 2. Link everything into bloaty.js and bloaty.wasm
 wasm_module: wasm_lib
