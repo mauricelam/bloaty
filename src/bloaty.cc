@@ -59,9 +59,11 @@ typedef size_t z_size_t;
 #include "absl/strings/str_join.h"
 #include "absl/strings/substitute.h"
 #include "bloaty.h"
+#ifndef __EMSCRIPTEN__
 #include "bloaty.pb.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/text_format.h"
+#endif
 #include "llvm/Demangle/Demangle.h"
 #include "re.h"
 #include "swift/Demangling/Demangle.h"
@@ -1421,8 +1423,12 @@ std::string_view RangeSink::ZlibDecompress(std::string_view data,
     return std::string_view();
   }
   unsigned char* dbuf =
-      arena_->google::protobuf::Arena::CreateArray<unsigned char>(
+#ifdef __EMSCRIPTEN__
+      arena_->CreateArray<unsigned char>(uncompressed_size);
+#else
+      google::protobuf::Arena::CreateArray<unsigned char>(
           arena_, uncompressed_size);
+#endif
   uLongf zliblen = uncompressed_size;
   if (uncompress(dbuf, &zliblen, (unsigned char*)(data.data()), data.size()) !=
       Z_OK) {
@@ -1447,8 +1453,12 @@ std::string_view RangeSink::ZstdDecompress(std::string_view data,
     return std::string_view();
   }
   char* dbuf =
+#ifdef __EMSCRIPTEN__
+      arena_->CreateArray<char>(uncompressed_size);
+#else
       google::protobuf::Arena::CreateArray<char>(
           arena_, uncompressed_size);
+#endif
   size_t zstd_len = uncompressed_size;
   size_t decompress_len =
       ZSTD_decompress(dbuf, uncompressed_size, data.data(), data.size());
@@ -2356,6 +2366,9 @@ bool DoParseOptions(bool skip_unknown, int* argc, char** argv[],
     } else if (args.TryParseFlag("--raw-map")) {
       options->set_dump_raw_map(true);
     } else if (args.TryParseOption("-c", &option)) {
+#ifdef __EMSCRIPTEN__
+      THROW("Loading configuration files is not supported in the WebAssembly build yet.");
+#else
       std::ifstream input_file(std::string(option), std::ios::in);
       if (!input_file.is_open()) {
         THROWF("couldn't open file $0", option);
@@ -2369,6 +2382,7 @@ bool DoParseOptions(bool skip_unknown, int* argc, char** argv[],
           options->max_rows_per_level() == 0) {
         options->set_max_rows_per_level(INT64_MAX);
       }
+#endif
     } else if (args.TryParseOption("-d", &option)) {
       std::vector<std::string> names = absl::StrSplit(option, ',');
       for (const auto& name : names) {

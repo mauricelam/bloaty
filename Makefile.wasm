@@ -2,46 +2,32 @@
 # Requires Emscripten SDK (emsdk) to be installed and sourced.
 
 EMSCRIPTEN_ROOT ?= $(shell which emcc | sed 's|/upstream/emscripten/emcc||')
-HOST_BUILD_DIR = host_build
 WASM_BUILD_DIR = build_wasm
 WEB_DIR = web
 
-.PHONY: all clean host_protoc wasm_lib wasm_module
+.PHONY: all clean wasm_lib wasm_module
 
 all: wasm_module
 
-# 1. Build protoc for the host machine
-host_protoc:
-	mkdir -p $(HOST_BUILD_DIR)
-	cd $(HOST_BUILD_DIR) && cmake /app -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
-	cd $(HOST_BUILD_DIR) && make -j$$(nproc) protoc
-
-# 2. Build libbloaty and dependencies for WASM
-wasm_lib: host_protoc
+# 1. Build libbloaty and dependencies for WASM
+# Note: protobuf is NOT built for WASM as we use a mock (src/wasm_protobuf_mock.h)
+wasm_lib:
 	mkdir -p $(WASM_BUILD_DIR)
-	cd $(WASM_BUILD_DIR) && emcmake cmake /app -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF \
-		-DPROTOC_FOUND=ON -Dprotoc_EXECUTABLE=/app/$(HOST_BUILD_DIR)/third_party/protobuf/protoc
-	# Manually run protoc to avoid issues with Emscripten's build system finding it
-	/app/$(HOST_BUILD_DIR)/third_party/protobuf/protoc -I/app/src /app/src/bloaty.proto --cpp_out=$(WASM_BUILD_DIR)/src
+	cd $(WASM_BUILD_DIR) && emcmake cmake /app -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
 	cd $(WASM_BUILD_DIR) && emmake make -j$$(nproc) libbloaty
 	# Ensure capstone and zstd are built
 	cd $(WASM_BUILD_DIR)/third_party/capstone && emmake make capstone_static
 	cd $(WASM_BUILD_DIR)/third_party/zstd/build/cmake/lib && emmake make libzstd_static
 
-# 3. Link everything into bloaty.js and bloaty.wasm
+# 2. Link everything into bloaty.js and bloaty.wasm
 wasm_module: wasm_lib
 	mkdir -p $(WEB_DIR)
-	em++ -O3 -I/app -I/app/src -I$(WASM_BUILD_DIR)/src \
+	em++ -O3 -I/app -I/app/src \
 		-I/app/third_party/re2 -I/app/third_party/capstone/include \
-		-I/app/third_party/protobuf/src -I/app/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
+		-I/app/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
 		-I/app/third_party/demumble/third_party/llvm/include \
 		-I/app/third_party/demumble/third_party/swift/include \
 		/app/src/wasm_main.cc $(WASM_BUILD_DIR)/liblibbloaty.a \
-		$(WASM_BUILD_DIR)/third_party/protobuf/libprotoc.a \
-		$(WASM_BUILD_DIR)/third_party/protobuf/libprotobuf.a \
-		$(WASM_BUILD_DIR)/third_party/protobuf/libupb.a \
-		$(WASM_BUILD_DIR)/third_party/protobuf/third_party/utf8_range/libutf8_range.a \
-		$(WASM_BUILD_DIR)/third_party/protobuf/third_party/utf8_range/libutf8_validity.a \
 		$(WASM_BUILD_DIR)/third_party/re2/libre2.a \
 		$(WASM_BUILD_DIR)/third_party/capstone/libcapstone.a \
 		$(WASM_BUILD_DIR)/third_party/zlib/libz.a \
@@ -64,4 +50,4 @@ wasm_module: wasm_lib
 		--bind -o $(WEB_DIR)/bloaty.js
 
 clean:
-	rm -rf $(HOST_BUILD_DIR) $(WASM_BUILD_DIR) $(WEB_DIR)/bloaty.js $(WEB_DIR)/bloaty.wasm
+	rm -rf $(WASM_BUILD_DIR) $(WEB_DIR)/bloaty.js $(WEB_DIR)/bloaty.wasm

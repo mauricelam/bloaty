@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "bloaty.h"
+#ifndef __EMSCRIPTEN__
 #include "bloaty.pb.h"
+#endif
 
 #include <iostream>
 

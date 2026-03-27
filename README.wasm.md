@@ -8,7 +8,8 @@ To support WebAssembly, the following changes were made:
 -   **Single-threaded Execution**: The `__EMSCRIPTEN__` macro is used in `src/bloaty.cc` to disable multi-threading (`std::thread`). This ensures compatibility with standard browser environments without requiring special headers (COOP/COEP).
 -   **JavaScript Entry Point**: A new file `src/wasm_main.cc` was added to expose Bloaty's functionality through Emscripten's `embind`. It mimics the CLI interface.
 -   **Virtual File System**: The WASM build uses Emscripten's MEMFS to handle input files.
--   **Dedicated Build System**: `Makefile.wasm` was created to manage the complex build process that requires a host-side `protoc`.
+-   **Mocked Protobuf**: To reduce the WASM binary size and complexity, the full protobuf library is replaced with a minimal mock (`src/wasm_protobuf_mock.h`) for the WebAssembly build. This removes the dependency on the host-side `protoc` tool during the WASM build.
+-   **Dedicated Build System**: `Makefile.wasm` was created to manage the build process.
 
 ## Prerequisites
 
@@ -21,14 +22,12 @@ To support WebAssembly, the following changes were made:
     source ./emsdk_env.sh
     ```
 2.  **CMake**: Version 3.10 or higher.
-3.  **Host Build Tools**: A C++ compiler (e.g., GCC or Clang) for building the `protoc` compiler on your host machine.
 
 ## Build Steps
 
 Use the provided `Makefile.wasm` to build the project. It automates the following steps:
-1.  Building `protoc` for the host.
-2.  Building `libbloaty.a` and all dependencies for WASM.
-3.  Linking everything into `web/bloaty.js` and `web/bloaty.wasm`.
+1.  Building `libbloaty.a` and all dependencies (except protobuf) for WASM.
+2.  Linking everything into `web/bloaty.js` and `web/bloaty.wasm`.
 
 ```bash
 make -f Makefile.wasm

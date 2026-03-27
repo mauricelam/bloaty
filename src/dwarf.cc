@@ -32,7 +32,9 @@
 #include "absl/strings/substitute.h"
 #include "absl/types/optional.h"
 #include "bloaty.h"
+#ifndef __EMSCRIPTEN__
 #include "bloaty.pb.h"
+#endif
 #include "dwarf_constants.h"
 #include "util.h"
 #include "dwarf/attr.h"
