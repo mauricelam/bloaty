@@ -63,6 +63,8 @@ typedef size_t z_size_t;
 #include "bloaty.pb.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/text_format.h"
+#else
+#include "wasm_protobuf_mock.h"
 #endif
 #include "llvm/Demangle/Demangle.h"
 #include "re.h"

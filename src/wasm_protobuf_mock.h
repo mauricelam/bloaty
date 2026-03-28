@@ -77,6 +77,7 @@ class CustomDataSource {
     return &rewrites_.back();
   }
   const std::vector<Regex>& rewrite() const { return rewrites_; }
+  const Regex& rewrite(int index) const { return rewrites_.at(index); }
   int rewrite_size() const { return rewrites_.size(); }
 
  private:
@@ -100,24 +101,30 @@ class Options {
 
   void add_filename(const std::string& f) { filenames_.push_back(f); }
   const std::vector<std::string>& filename() const { return filenames_; }
+  const std::string& filename(int index) const { return filenames_.at(index); }
   int filename_size() const { return filenames_.size(); }
 
   void add_base_filename(const std::string& f) { base_filenames_.push_back(f); }
   const std::vector<std::string>& base_filename() const { return base_filenames_; }
+  const std::string& base_filename(int index) const { return base_filenames_.at(index); }
   int base_filename_size() const { return base_filenames_.size(); }
 
   void add_debug_filename(const std::string& f) { debug_filenames_.push_back(f); }
   const std::vector<std::string>& debug_filename() const { return debug_filenames_; }
+  const std::string& debug_filename(int index) const { return debug_filenames_.at(index); }
   int debug_filename_size() const { return debug_filenames_.size(); }
 
   void add_source_map(const std::string& s) { source_maps_.push_back(s); }
   const std::vector<std::string>& source_map() const { return source_maps_; }
+  const std::string& source_map(int index) const { return source_maps_.at(index); }
 
   void add_dsym_path(const std::string& p) { dsym_paths_.push_back(p); }
   const std::vector<std::string>& dsym_path() const { return dsym_paths_; }
+  const std::string& dsym_path(int index) const { return dsym_paths_.at(index); }
 
   void add_data_source(const std::string& d) { data_sources_.push_back(d); }
   const std::vector<std::string>& data_source() const { return data_sources_; }
+  const std::string& data_source(int index) const { return data_sources_.at(index); }
   int data_source_size() const { return data_sources_.size(); }
 
   void set_max_rows_per_level(int64_t m) { max_rows_per_level_ = m; has_max_rows_per_level_ = true; }
@@ -147,6 +154,8 @@ class Options {
     return &custom_data_sources_.back();
   }
   const std::vector<CustomDataSource>& custom_data_source() const { return custom_data_sources_; }
+  const CustomDataSource& custom_data_source(int index) const { return custom_data_sources_.at(index); }
+  int custom_data_source_size() const { return custom_data_sources_.size(); }
 
   void set_disassemble_function(const std::string& f) { disassemble_function_ = f; }
   const std::string& disassemble_function() const { return disassemble_function_; }
