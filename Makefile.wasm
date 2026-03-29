@@ -15,7 +15,8 @@ all: wasm_module
 wasm_lib:
 	mkdir -p $(WASM_BUILD_DIR)
 	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -G Ninja -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
-	cd $(WASM_BUILD_DIR) && ninja libbloaty capstone_static libzstd_static
+	cd $(WASM_BUILD_DIR) && ninja libbloaty capstone_static libzstd_static && \
+	ninja -t targets | grep "\.a:" | grep "absl" | sed 's/:.*//' | xargs ninja
 
 # 2. Link everything into bloaty.js and bloaty.wasm
 wasm_module: wasm_lib
