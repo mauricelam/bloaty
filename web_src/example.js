@@ -87,6 +87,10 @@ function runBloaty() {
         console.log(`Running bloaty -d ${dataSource} ${virtualPath}`);
         const result = bloatyModule.run_bloaty(args);
 
+        if (result.startsWith('bloaty: ')) {
+            throw new Error(result.substring(8));
+        }
+
         // Display output
         outputContainer.innerText = result || 'No output from Bloaty';
 

@@ -14,7 +14,8 @@ all: wasm_module
 # Note: protobuf is NOT built for WASM as we use a mock (src/wasm_protobuf_mock.h)
 wasm_lib:
 	mkdir -p $(WASM_BUILD_DIR)
-	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -G Ninja -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF
+	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -G Ninja -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF \
+		-DCMAKE_CXX_FLAGS="-fwasm-exceptions" -DCMAKE_C_FLAGS="-fwasm-exceptions"
 	cd $(WASM_BUILD_DIR) && ninja libbloaty capstone_static libzstd_static && \
 	ninja -t targets | grep "\.a:" | grep "absl" | sed 's/:.*//' | xargs ninja
 
@@ -23,7 +24,7 @@ wasm_module: wasm_lib
 	mkdir -p $(WEB_DIR)
 	# Manually copy index.html and example.js to the web directory if they are not there
 	cp web_src/* $(WEB_DIR)/ 2>/dev/null || true
-	em++ -O3 -I$(SOURCE_DIR) -I$(SOURCE_DIR)/src \
+	em++ -O3 -fwasm-exceptions -I$(SOURCE_DIR) -I$(SOURCE_DIR)/src \
 		-I$(SOURCE_DIR)/third_party/re2 -I$(SOURCE_DIR)/third_party/capstone/include \
 		-I$(SOURCE_DIR)/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
 		-I$(SOURCE_DIR)/third_party/demumble/third_party/llvm/include \
