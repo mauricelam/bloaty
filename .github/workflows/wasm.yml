@@ -1,0 +1,36 @@
+name: WASM Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  wasm-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Build Bloaty WASM
+        run: |
+          make -f Makefile.wasm
+
+      - name: Verify Artifacts
+        run: |
+          ls -l web/bloaty.js web/bloaty.wasm
+          if [ ! -s web/bloaty.wasm ]; then
+            echo "bloaty.wasm is missing or empty"
+            exit 1
+          fi

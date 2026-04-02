@@ -1,0 +1,55 @@
+# Makefile for building Bloaty as WebAssembly
+# Requires Emscripten SDK (emsdk) to be installed and sourced.
+
+EMSCRIPTEN_ROOT ?= $(shell which emcc | sed 's|/upstream/emscripten/emcc||')
+WASM_BUILD_DIR = build_wasm
+WEB_DIR = web
+SOURCE_DIR = $(shell pwd)
+
+.PHONY: all clean wasm_lib wasm_module
+
+all: wasm_module
+
+# 1. Build libbloaty and dependencies for WASM
+# Note: protobuf is NOT built for WASM as we use a mock (src/wasm_protobuf_mock.h)
+wasm_lib:
+	mkdir -p $(WASM_BUILD_DIR)
+	cd $(WASM_BUILD_DIR) && emcmake cmake $(SOURCE_DIR) -G Ninja -DBLOATY_ENABLE_CMAKETARGETS=OFF -DBUILD_TESTING=OFF \
+		-DCMAKE_CXX_FLAGS="-fwasm-exceptions" -DCMAKE_C_FLAGS="-fwasm-exceptions"
+	cd $(WASM_BUILD_DIR) && ninja libbloaty capstone_static libzstd_static && \
+	ninja -t targets | grep "\.a:" | grep "absl" | sed 's/:.*//' | xargs ninja
+
+# 2. Link everything into bloaty.js and bloaty.wasm
+wasm_module: wasm_lib
+	mkdir -p $(WEB_DIR)
+	# Manually copy index.html and example.js to the web directory if they are not there
+	cp web_src/* $(WEB_DIR)/ 2>/dev/null || true
+	em++ -O3 -fwasm-exceptions -I$(SOURCE_DIR) -I$(SOURCE_DIR)/src \
+		-I$(SOURCE_DIR)/third_party/re2 -I$(SOURCE_DIR)/third_party/capstone/include \
+		-I$(SOURCE_DIR)/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
+		-I$(SOURCE_DIR)/third_party/demumble/third_party/llvm/include \
+		-I$(SOURCE_DIR)/third_party/demumble/third_party/swift/include \
+		$(SOURCE_DIR)/src/wasm_main.cc $(WASM_BUILD_DIR)/liblibbloaty.a \
+		$(WASM_BUILD_DIR)/third_party/re2/libre2.a \
+		$(WASM_BUILD_DIR)/third_party/capstone/libcapstone.a \
+		$(WASM_BUILD_DIR)/third_party/zlib/libz.a \
+		$(WASM_BUILD_DIR)/third_party/zstd/build/cmake/lib/libzstd.a \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/strings -labsl_strings -labsl_strings_internal -labsl_string_view -labsl_cord -labsl_cord_internal -labsl_cordz_functions -labsl_cordz_info -labsl_cordz_handle -labsl_str_format_internal \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/base -labsl_base -labsl_throw_delegate -labsl_raw_logging_internal -labsl_spinlock_wait -labsl_tracing_internal -labsl_malloc_internal -labsl_log_severity -labsl_strerror \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/log -labsl_log_internal_message -labsl_log_internal_check_op -labsl_log_internal_nullguard -labsl_log_internal_conditions -labsl_log_initialize -labsl_die_if_null -labsl_log_sink -labsl_log_internal_fnmatch -labsl_log_internal_globals -labsl_log_internal_proto -labsl_log_internal_format -labsl_log_internal_log_sink_set -labsl_log_internal_structured_proto -labsl_log_globals -labsl_log_entry -labsl_vlog_config_internal \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/debugging -labsl_demangle_internal -labsl_debugging_internal -labsl_stacktrace -labsl_symbolize -labsl_examine_stack -labsl_leak_check -labsl_demangle_rust -labsl_decode_rust_punycode -labsl_utf8_for_code_point \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/numeric -labsl_int128 \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/status -labsl_status -labsl_statusor \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/hash -labsl_hash -labsl_city \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/container -labsl_raw_hash_set -labsl_hashtablez_sampler \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/synchronization -labsl_synchronization -labsl_graphcycles_internal -labsl_kernel_timeout_internal \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/time -labsl_time -labsl_civil_time -labsl_time_zone \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/flags -labsl_flags_internal -labsl_flags_marshalling -labsl_flags_reflection -labsl_flags_config -labsl_flags_program_name -labsl_flags_commandlineflag -labsl_flags_commandlineflag_internal -labsl_flags_private_handle_accessor \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/profiling -labsl_exponential_biased \
+		-L$(WASM_BUILD_DIR)/third_party/abseil-cpp/absl/crc -labsl_crc32c -labsl_crc_internal -labsl_crc_cpu_detect -labsl_crc_cord_state \
+		-s EXPORTED_RUNTIME_METHODS='["FS"]' -s MODULARIZE=1 -s EXPORT_NAME='BloatyModule' \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		--bind -o $(WEB_DIR)/bloaty.js
+
+clean:
+	rm -rf $(WASM_BUILD_DIR) $(WEB_DIR)/bloaty.js $(WEB_DIR)/bloaty.wasm

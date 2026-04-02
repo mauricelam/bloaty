@@ -13,7 +13,11 @@
 // limitations under the License.
 
 #include "bloaty.h"
+#ifndef __EMSCRIPTEN__
 #include "bloaty.pb.h"
+#else
+#include "wasm_protobuf_mock.h"
+#endif
 
 #include <iostream>
 

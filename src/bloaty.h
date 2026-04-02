@@ -37,7 +37,11 @@
 #include "capstone/capstone.h"
 
 #include "dwarf/debug_info.h"
+#ifdef __EMSCRIPTEN__
+#include "wasm_protobuf_mock.h"
+#else
 #include "bloaty.pb.h"
+#endif
 #include "range_map.h"
 #include "re.h"
 
