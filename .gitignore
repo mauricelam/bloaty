@@ -4,7 +4,15 @@
 *.o
 .*.sw?
 
-# Project-specific binaries
+# All build-generated artifacts (native, WASM, metadata)
+build
+build-*
+build_*
+build_dir
+host_build/
+build/
+
+# Project-specific binaries (in case of legacy in-tree builds)
 /bloaty
 /bloaty_test
 /bloaty_test_pe
@@ -13,15 +21,7 @@
 /fuzz_test
 /fuzz_target
 
-# Build directories
-build*/
-host_build/
-
-# WebAssembly artifacts (built in web/ by Makefile.wasm)
-web/bloaty.js
-web/bloaty.wasm
-
-# Generated source/config files
+# Generated source/config files (in case of legacy in-tree builds)
 /src/bloaty.pb.cc
 /src/bloaty.pb.h
 /tests/lit.site.cfg

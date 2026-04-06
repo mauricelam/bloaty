@@ -27,7 +27,7 @@ To support WebAssembly, the following changes were made:
 
 Use the provided `Makefile.wasm` to build the project. It automates the following steps:
 1.  Building `libbloaty.a` and all dependencies (except protobuf) for WASM.
-2.  Linking everything into `web/bloaty.js` and `web/bloaty.wasm`.
+2.  Linking everything into `build/web/bloaty.js` and `build/web/bloaty.wasm`.
 
 ```bash
 make -f Makefile.wasm
@@ -38,5 +38,5 @@ make -f Makefile.wasm
 1.  Build the project as described above.
 2.  Navigate to the root directory.
 3.  Serve the root using a local web server (e.g., `python3 -m http.server`).
-4.  Open the browser and navigate to `http://localhost:8000/web/`.
+4.  Open the browser and navigate to `http://localhost:8000/build/web/`.
 5.  Drag and drop a binary file into the application to see its size profile.
