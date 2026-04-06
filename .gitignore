@@ -3,10 +3,36 @@
 *.dSYM
 *.o
 .*.sw?
+
+# Project-specific binaries
 /bloaty
-build
-build-*
-build_wasm/
+/bloaty_test
+/bloaty_test_pe
+/bloaty_misc_test
+/range_map_test
+/fuzz_test
+/fuzz_target
+
+# Build directories
+build*/
 host_build/
+
+# WebAssembly artifacts (built in web/ by Makefile.wasm)
 web/bloaty.js
 web/bloaty.wasm
+
+# Generated source/config files
+/src/bloaty.pb.cc
+/src/bloaty.pb.h
+/tests/lit.site.cfg
+
+# Build system metadata (CMake/Ninja/CTest)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+build.ninja
+.ninja_log
+.ninja_deps
+compile_commands.json
+DartConfiguration.tcl
+Testing/
