@@ -30,7 +30,7 @@ wasm_module: wasm_lib
 		-I$(SOURCE_DIR)/third_party/abseil-cpp -I$(WASM_BUILD_DIR)/third_party/zlib \
 		-I$(SOURCE_DIR)/third_party/demumble/third_party/llvm/include \
 		-I$(SOURCE_DIR)/third_party/demumble/third_party/swift/include \
-		$(SOURCE_DIR)/src/wasm_main.cc $(WASM_BUILD_DIR)/libbloaty.a \
+		$(SOURCE_DIR)/src/wasm_main.cc $(WASM_BUILD_DIR)/liblibbloaty.a \
 		$(WASM_BUILD_DIR)/third_party/re2/libre2.a \
 		$(WASM_BUILD_DIR)/third_party/capstone/libcapstone.a \
 		$(WASM_BUILD_DIR)/third_party/zlib/libz.a \
