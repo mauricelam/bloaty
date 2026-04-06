@@ -10,3 +10,4 @@ build_wasm/
 host_build/
 web/bloaty.js
 web/bloaty.wasm
+web/bloaty.d.ts

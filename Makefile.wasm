@@ -2,8 +2,8 @@
 # Requires Emscripten SDK (emsdk) to be installed and sourced.
 
 EMSCRIPTEN_ROOT ?= $(shell which emcc | sed 's|/upstream/emscripten/emcc||')
-WASM_BUILD_DIR = build_wasm
-WEB_DIR = web
+WASM_BUILD_DIR ?= build_wasm
+WEB_DIR ?= web
 SOURCE_DIR = $(shell pwd)
 
 .PHONY: all clean wasm_lib wasm_module
@@ -50,7 +50,7 @@ wasm_module: wasm_lib
 		-s EXPORTED_RUNTIME_METHODS='["FS"]' -s MODULARIZE=1 -s EXPORT_NAME='BloatyModule' \
 		-s EXPORT_ES6=1 -s ENVIRONMENT=web,worker \
 		-s ALLOW_MEMORY_GROWTH=1 \
-		--bind -o $(WEB_DIR)/bloaty.js
+		--bind --emit-tsd $(WEB_DIR)/bloaty.d.ts -o $(WEB_DIR)/bloaty.js
 
 clean:
-	rm -rf $(WASM_BUILD_DIR) $(WEB_DIR)/bloaty.js $(WEB_DIR)/bloaty.wasm
+	rm -rf $(WASM_BUILD_DIR) $(WEB_DIR)/bloaty.js $(WEB_DIR)/bloaty.wasm $(WEB_DIR)/bloaty.d.ts
