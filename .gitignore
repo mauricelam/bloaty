@@ -3,10 +3,7 @@
 *.dSYM
 *.o
 .*.sw?
-/bloaty
-build
-build-*
-build_wasm/
+
+# All build-generated artifacts are consolidated in build/
+build/
 host_build/
-web/bloaty.js
-web/bloaty.wasm

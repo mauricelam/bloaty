@@ -29,8 +29,8 @@ jobs:
 
       - name: Verify Artifacts
         run: |
-          ls -l web/bloaty.js web/bloaty.wasm
-          if [ ! -s web/bloaty.wasm ]; then
+          ls -l build/web/bloaty.js build/web/bloaty.wasm
+          if [ ! -s build/web/bloaty.wasm ]; then
             echo "bloaty.wasm is missing or empty"
             exit 1
           fi
